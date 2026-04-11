@@ -26,7 +26,7 @@ export default function VerifyPage() {
     if (!token || hasFetched.current) return;
     hasFetched.current = true;
 
-    fetch(`/api/recycle/scan/${token}`)
+    fetch(`${process.env.REACT_APP_API_URL || "https://ecycle-backend-lue6.onrender.com/api"}/recycle/scan/${token}`)
       .then(r => r.json())
       .then(data => {
         if (data.error) setPreviewErr(data.error);
@@ -41,7 +41,7 @@ export default function VerifyPage() {
     if (!codeword.trim()) return setError('Please enter the company password');
     setError(''); setVerifying(true);
     try {
-      const res = await fetch('/api/recycle/verify-scan', {
+      const res = await fetch(`${process.env.REACT_APP_API_URL || "https://ecycle-backend-lue6.onrender.com/api"}/recycle/verify-scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, codeword: codeword.trim() })
