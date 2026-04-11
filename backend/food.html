@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Surplus Food Management System</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #eef2f3;
+  text-align: center;
+}
+
+h1 {
+  color: #2c3e50;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  width: 320px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px gray;
+}
+
+input, select {
+  width: 90%;
+  padding: 10px;
+  margin: 10px;
+}
+
+button {
+  background: green;
+  color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.food-item {
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
+}
+
+.sell { color: orange; }
+.donate { color: green; }
+
+.timer {
+  font-weight: bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🍱 Surplus Food Management System</h1>
+
+<div class="container">
+
+  <!-- Add Food -->
+  <div class="card">
+    <h2>Add Food</h2>
+
+    <input type="text" id="foodName" placeholder="Food Name">
+    <input type="number" id="expiry" placeholder="Expiry (minutes)">
+    <input type="text" id="location" placeholder="Location">
+
+    <select id="type">
+      <option value="donate">Donate</option>
+      <option value="sell">Sell</option>
+    </select>
+
+    <button onclick="addFood()">Add Food</button>
+  </div>
+
+  <!-- Filter -->
+  <div class="card">
+    <h2>Filter</h2>
+
+    <select id="filterType" onchange="displayFoods()">
+      <option value="all">All</option>
+      <option value="donate">Donate</option>
+      <option value="sell">Sell</option>
+    </select>
+  </div>
+
+  <!-- Food List -->
+  <div class="card">
+    <h2>Available Food</h2>
+    <div id="foodList"></div>
+  </div>
+
+</div>
+
+<!-- QR Popup -->
+<div id="qrPopup" style="display:none; background:white; padding:20px; position:fixed; top:30%; left:40%; box-shadow:0 0 10px black;">
+  <h3>Scan to Pay</h3>
+  <canvas id="qr"></canvas><br>
+  <button onclick="closeQR()">Close</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<script>
+let foods = JSON.parse(localStorage.getItem("foods")) || [];
+
+function saveData() {
+  localStorage.setItem("foods", JSON.stringify(foods));
+}
+
+function addFood() {
+  let name = document.getElementById("foodName").value;
+  let expiry = document.getElementById("expiry").value;
+  let location = document.getElementById("location").value;
+  let type = document.getElementById("type").value;
+
+  if (!name || !expiry || !location) {
+    alert("Fill all fields");
+    return;
+  }
+
+  let food = {
+    name,
+    location,
+    type,
+    expiry: Date.now() + expiry * 60000
+  };
+
+  foods.push(food);
+  saveData();
+  displayFoods();
+}
+
+function displayFoods() {
+  let list = document.getElementById("foodList");
+  let filter = document.getElementById("filterType").value;
+
+  list.innerHTML = "";
+
+  foods.forEach((food, index) => {
+
+    let remaining = Math.floor((food.expiry - Date.now()) / 1000);
+
+    if (remaining <= 0) {
+      foods.splice(index, 1);
+      saveData();
+      return;
+    }
+
+    if (filter !== "all" && filter !== food.type) return;
+
+    let div = document.createElement("div");
+    div.className = "food-item";
+
+    div.innerHTML = `
+      <h3>${food.name}</h3>
+      <p>📍 ${food.location}</p>
+      <p class="${food.type}">Type: ${food.type}</p>
+      <p class="timer">⏳ ${remaining}s left</p>
+      ${food.type === "sell"
+        ? `<button onclick="showQR('${food.name}')">Pay</button>`
+        : `<button onclick="requestFood('${food.name}')">Request</button>`
+      }
+      <button onclick="deleteFood(${index})">Delete</button>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+function deleteFood(index) {
+  foods.splice(index, 1);
+  saveData();
+  displayFoods();
+}
+
+function requestFood(name) {
+  alert("Request sent for " + name);
+}
+
+function showQR(name) {
+  document.getElementById("qrPopup").style.display = "block";
+
+  QRCode.toCanvas(document.getElementById('qr'), 
+    "Pay for " + name + " via UPI", function (error) {
+    if (error) console.error(error);
+  });
+}
+
+function closeQR() {
+  document.getElementById("qrPopup").style.display = "none";
+}
+
+setInterval(displayFoods, 1000);
+
+displayFoods();
+</script>
+
+</body>
+</html>
