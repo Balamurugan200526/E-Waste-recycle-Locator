@@ -103,6 +103,8 @@ ecycle/
 
 ## ⚙️ Local Development Setup
 
+🔗 https://e-waste-recycle-locator.vercel.app/
+
 ### Prerequisites
 
 - **Node.js** v18+ — https://nodejs.org
